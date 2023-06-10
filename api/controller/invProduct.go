@@ -5,6 +5,7 @@ import (
 	"example/pkg/config"
 	"example/pkg/model"
 	"github.com/gofiber/fiber/v2"
+	"strconv"
 )
 
 type ProductFilter struct {
@@ -56,8 +57,11 @@ func GetProductsByFilter(c *fiber.Ctx) error {
 
 func GetProduct(c *fiber.Ctx) error {
 	var id = c.Params("id")
-
-	item, err := service.GetProductById(id)
+	num, err := strconv.ParseUint(id, 10, 32)
+	if err != nil {
+		return config.ResponseHandler(c, fiber.StatusInternalServerError, "", err.Error())
+	}
+	item, err := service.GetProductById(uint(num))
 	if err != nil {
 		return config.ResponseHandler(c, fiber.StatusInternalServerError, "", err.Error())
 	} else if item.ID == 0 {
@@ -72,21 +76,30 @@ func CreateProduct(c *fiber.Ctx) error {
 	if err := c.BodyParser(&payload); err != nil {
 		return config.ResponseHandler(c, fiber.StatusBadRequest, "Review your input", err.Error())
 	}
-	result, err := service.CreateProduct(payload)
+	createResult, err := service.CreateProduct(payload)
 	if err != nil {
 		return config.ResponseHandler(c, fiber.StatusInternalServerError, "Couldn't create supplier", err.Error())
 	}
-	return config.ResponseHandler(c, fiber.StatusCreated, "Created Product", result)
+	findResult, err := service.GetProductById(createResult.ID)
+	if err != nil {
+		return err
+	}
+	return config.ResponseHandler(c, fiber.StatusCreated, "Created Product", findResult)
 }
 
 func UpdateProduct(c *fiber.Ctx) error {
 	var id = c.Params("id")
 	var payload *model.InvProduct
 
+	num, err := strconv.ParseUint(id, 10, 32)
+	if err != nil {
+		return config.ResponseHandler(c, fiber.StatusInternalServerError, "", err.Error())
+	}
+
 	if err := c.BodyParser(&payload); err != nil {
 		return config.ResponseHandler(c, fiber.StatusBadRequest, "Review your input", err.Error())
 	}
-	item, err := service.GetProductById(id)
+	item, err := service.GetProductById(uint(num))
 	if err != nil {
 		return config.ResponseHandler(c, fiber.StatusInternalServerError, "", err.Error())
 	} else if item.ID == 0 {

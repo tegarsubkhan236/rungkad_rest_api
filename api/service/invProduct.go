@@ -51,7 +51,7 @@ func GetAllProductByFilter(offset, limit, supplierID int, productCategoryID []in
 	return data, count, nil
 }
 
-func GetProductById(id string) (*model.InvProduct, error) {
+func GetProductById(id uint) (*model.InvProduct, error) {
 	var db = config.DB
 	var item model.InvProduct
 

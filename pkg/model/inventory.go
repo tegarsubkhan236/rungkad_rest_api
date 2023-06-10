@@ -42,6 +42,16 @@ type InvProduct struct {
 	DeletedAt          gorm.DeletedAt       `gorm:"index" json:"deleted_at"`
 }
 
+type InvProductPrice struct {
+	ID           uint           `gorm:"primaryKey" json:"id"`
+	InvProductID int            `json:"inv_product_id"`
+	InvProduct   InvProduct     `json:"inv_product"`
+	Price        int            `json:"price"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"deleted_at"`
+}
+
 type InvStock struct {
 	ID           uint           `gorm:"primaryKey" json:"id"`
 	InvProductID int            `json:"inv_product_id"`
