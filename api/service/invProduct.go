@@ -5,20 +5,7 @@ import (
 	"example/pkg/model"
 )
 
-func GetAllProduct(offset, limit int) ([]model.InvProduct, int64, error) {
-	var db = config.DB
-	var count int64
-	var data []model.InvProduct
-
-	result := db.Model(&model.InvProduct{}).Preload("InvSupplier").Preload("InvProductCategory").
-		Count(&count).Limit(limit).Offset(offset).Find(&data)
-	if result.Error != nil {
-		return nil, 0, result.Error
-	}
-	return data, count, nil
-}
-
-func GetAllProductByFilter(offset, limit, supplierID int, productCategoryID []int, searchText string) ([]model.InvProduct, int64, error) {
+func GetAllProduct(offset, limit, supplierID int, productCategoryID []int, searchText string) ([]model.InvProduct, int64, error) {
 	var db = config.DB
 	var count int64
 	var data []model.InvProduct
@@ -61,7 +48,7 @@ func GetProductById(id uint) (*model.InvProduct, error) {
 	return &item, nil
 }
 
-func CreateProduct(data *model.InvProduct) (*model.InvProduct, error) {
+func CreateProduct(data []model.InvProduct) ([]model.InvProduct, error) {
 	var db = config.DB
 
 	if err := db.Create(&data).Error; err != nil {
@@ -79,11 +66,38 @@ func UpdateProduct(item *model.InvProduct, payload *model.InvProduct) (*model.In
 	return item, nil
 }
 
-func DestroyProduct(id string) error {
+func DestroyProduct(ids []int) error {
 	var db = config.DB
+	var products []model.InvProduct
+	var tx = db.Begin()
 
-	if err := db.Unscoped().Delete(&model.InvProduct{}, "id = ?", id).Error; err != nil {
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := db.Where("id IN ?", ids).Find(&products).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
+
+	for _, product := range products {
+		if err := db.Model(&product).Association("InvProductCategory").Clear(); err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		if err := db.Unscoped().Delete(&product).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	return nil
 }

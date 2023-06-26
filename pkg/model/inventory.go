@@ -6,7 +6,7 @@ import (
 )
 
 type InvSupplier struct {
-	ID            uint           `gorm:"primaryKey" json:"id"`
+	ID            uint           `gorm:"primary_key" json:"id"`
 	Name          string         `gorm:"type:varchar(32);not null" json:"name"`
 	Address       string         `gorm:"type:varchar(32);not null" json:"address"`
 	ContactPerson string         `gorm:"type:varchar(32);not null" json:"contact_person"`
@@ -18,7 +18,7 @@ type InvSupplier struct {
 }
 
 type InvProductCategory struct {
-	ID        uint                 `gorm:"primaryKey" json:"id"`
+	ID        uint                 `gorm:"primary_key" json:"id"`
 	Name      string               `gorm:"type:varchar(32);not null" json:"name"`
 	ParentID  *uint                `json:"parent_id"`
 	Children  []InvProductCategory `gorm:"foreignkey:ParentID;references:id" json:"children"`
@@ -28,7 +28,7 @@ type InvProductCategory struct {
 }
 
 type InvProduct struct {
-	ID                 uint                 `gorm:"primaryKey" json:"id"`
+	ID                 uint                 `gorm:"primary_key" json:"id"`
 	Name               string               `gorm:"type:varchar(32);not null" json:"name"`
 	Image              string               `json:"image"`
 	Cost               int                  `gorm:"not null" json:"cost"`
@@ -43,7 +43,7 @@ type InvProduct struct {
 }
 
 type InvProductPrice struct {
-	ID           uint           `gorm:"primaryKey" json:"id"`
+	ID           uint           `gorm:"primary_key" json:"id"`
 	InvProductID int            `json:"inv_product_id"`
 	InvProduct   InvProduct     `json:"inv_product"`
 	Price        int            `json:"price"`
@@ -53,7 +53,7 @@ type InvProductPrice struct {
 }
 
 type InvStock struct {
-	ID           uint           `gorm:"primaryKey" json:"id"`
+	ID           uint           `gorm:"primary_key" json:"id"`
 	InvProductID int            `json:"inv_product_id"`
 	InvProduct   InvProduct     `json:"inv_product"`
 	CoreUserID   int            `json:"core_user_id"`
@@ -71,28 +71,28 @@ type InvSell struct {
 }
 
 type InvPO struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
+	ID        uint           `gorm:"primary_key" json:"id"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
 }
 
 type InvReceiving struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
+	ID        uint           `gorm:"primary_key" json:"id"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
 }
 
 type InvBO struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
+	ID        uint           `gorm:"primary_key" json:"id"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
 }
 
 type InvReturn struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
+	ID        uint           `gorm:"primary_key" json:"id"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`

@@ -38,11 +38,10 @@ func SetupRoutes(app *fiber.App) {
 
 	productRoute := api.Group("/product", middleware.Protected())
 	productRoute.Get("/", controller.GetProducts)
-	productRoute.Get("/search", controller.GetProductsByFilter)
 	productRoute.Get("/:id", controller.GetProduct)
 	productRoute.Post("/", controller.CreateProduct)
 	productRoute.Put("/:id", controller.UpdateProduct)
-	productRoute.Delete("/:id", controller.DeleteProduct)
+	productRoute.Delete("/", controller.DeleteProduct)
 
 	digiflazzRoute := api.Group("/digiflazz", middleware.Protected())
 	digiflazzRoute.Get("/cek-saldo", controller.BalanceCheck)

@@ -8,36 +8,17 @@ import (
 	"strconv"
 )
 
-type ProductFilter struct {
-	Page            int    `query:"page"`
-	Limit           int    `query:"limit"`
-	SupplierID      int    `query:"supplier_id"`
-	ProductCategory []int  `query:"product_category"`
-	SearchText      string `query:"search_text"`
-}
-
 func GetProducts(c *fiber.Ctx) error {
-	var productFilter = new(ProductFilter)
-	if err := c.QueryParser(productFilter); err != nil {
-		return config.ResponseHandler(c, fiber.StatusBadRequest, "Review your input", err.Error())
+	type ProductFilter struct {
+		Page            int    `query:"page"`
+		Limit           int    `query:"limit"`
+		SupplierID      int    `query:"supplier_id"`
+		ProductCategory []int  `query:"product_category"`
+		SearchText      string `query:"search_text"`
 	}
-	if productFilter.Page == 0 {
-		productFilter.Page = 1
-	}
-	if productFilter.Limit == 0 {
-		productFilter.Limit = 10
-	}
-	offset := (productFilter.Page - 1) * productFilter.Limit
-	data, count, err := service.GetAllProduct(offset, productFilter.Limit)
-	if err != nil {
-		return config.ResponseHandler(c, fiber.StatusInternalServerError, "", err.Error())
-	}
-	return config.ResponseHandler(c, fiber.StatusOK, "", fiber.Map{"results": data, "total": count})
-}
+	var productFilter ProductFilter
 
-func GetProductsByFilter(c *fiber.Ctx) error {
-	var productFilter = new(ProductFilter)
-	if err := c.QueryParser(productFilter); err != nil {
+	if err := c.QueryParser(&productFilter); err != nil {
 		return config.ResponseHandler(c, fiber.StatusBadRequest, "Review your input", err.Error())
 	}
 	if productFilter.Page == 0 {
@@ -48,7 +29,7 @@ func GetProductsByFilter(c *fiber.Ctx) error {
 	}
 
 	offset := (productFilter.Page - 1) * productFilter.Limit
-	data, count, err := service.GetAllProductByFilter(offset, productFilter.Limit, productFilter.SupplierID, productFilter.ProductCategory, productFilter.SearchText)
+	data, count, err := service.GetAllProduct(offset, productFilter.Limit, productFilter.SupplierID, productFilter.ProductCategory, productFilter.SearchText)
 	if err != nil {
 		return config.ResponseHandler(c, fiber.StatusInternalServerError, "", err.Error())
 	}
@@ -71,20 +52,24 @@ func GetProduct(c *fiber.Ctx) error {
 }
 
 func CreateProduct(c *fiber.Ctx) error {
-	var payload *model.InvProduct
+	var payload []model.InvProduct
 
 	if err := c.BodyParser(&payload); err != nil {
-		return config.ResponseHandler(c, fiber.StatusBadRequest, "Review your input", err.Error())
+		return config.ResponseHandler(c, fiber.StatusBadRequest, "Failed to parse request body", err.Error())
 	}
 	createResult, err := service.CreateProduct(payload)
 	if err != nil {
-		return config.ResponseHandler(c, fiber.StatusInternalServerError, "Couldn't create supplier", err.Error())
+		return config.ResponseHandler(c, fiber.StatusInternalServerError, "Couldn't create product", err.Error())
 	}
-	findResult, err := service.GetProductById(createResult.ID)
-	if err != nil {
-		return err
+	if len(createResult) == 1 {
+		findResult, err := service.GetProductById(createResult[0].ID)
+		if err != nil {
+			return err
+		}
+		return config.ResponseHandler(c, fiber.StatusCreated, "Created Product", findResult)
+	} else {
+		return config.ResponseHandler(c, fiber.StatusCreated, "Created Product", len(createResult))
 	}
-	return config.ResponseHandler(c, fiber.StatusCreated, "Created Product", findResult)
 }
 
 func UpdateProduct(c *fiber.Ctx) error {
@@ -113,9 +98,16 @@ func UpdateProduct(c *fiber.Ctx) error {
 }
 
 func DeleteProduct(c *fiber.Ctx) error {
-	var id = c.Params("id")
+	type ProductDelete struct {
+		ID []int `query:"id"`
+	}
+	var productDelete ProductDelete
 
-	err := service.DestroyProduct(id)
+	if err := c.QueryParser(&productDelete); err != nil {
+		return config.ResponseHandler(c, fiber.StatusBadRequest, "Failed to parse request query", err.Error())
+	}
+
+	err := service.DestroyProduct(productDelete.ID)
 	if err != nil {
 		return config.ResponseHandler(c, fiber.StatusBadGateway, "error", err.Error())
 	}
